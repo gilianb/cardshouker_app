@@ -2,15 +2,18 @@
 
 import supabase from '@/lib/supabase'
 
-type Props = {
-  params: { id: string }
-}
+export default async function CardDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  // Await the params object before using its properties
+  const { id } = await params
 
-export default async function CardDetailPage({ params }: Props) {
   const { data: card, error } = await supabase
     .from('cards')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (error || !card) {
@@ -21,7 +24,11 @@ export default async function CardDetailPage({ params }: Props) {
     <div className="p-6 max-w-2xl mx-auto">
       <h1 className="text-3xl font-bold mb-4">{card.name}</h1>
       {card.image_url && (
-        <img src={card.image_url} alt={card.name} className="w-full h-auto mb-4 rounded shadow" />
+        <img
+          src={card.image_url}
+          alt={card.name}
+          className="w-full h-auto mb-4 rounded shadow"
+        />
       )}
       <div className="space-y-2 text-sm text-gray-700">
         <p><strong>Effect:</strong> {card.effect}</p>
