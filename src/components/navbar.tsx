@@ -1,24 +1,62 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabaseBrowser } from '@/lib/supabase-browser'
+import type { Session } from '@supabase/supabase-js'
 
 export default function Navbar() {
-  const pathname = usePathname()
+  const [session, setSession] = useState<Session | null>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    // 1️⃣ Récupère la session actuelle
+    supabaseBrowser.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+    })
+
+    // 2️⃣ Abonnement aux changements de session (login/logout)
+    const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange(
+      (_event, newSession) => {
+        setSession(newSession)
+      }
+    )
+
+    // 3️⃣ Nettoyage à la destruction du composant
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  const handleLogout = async () => {
+    await supabaseBrowser.auth.signOut()
+    router.push('/login')
+  }
 
   return (
-    <nav className="bg-white shadow px-6 py-4 mb-6">
-      <div className="flex items-center gap-6 text-sm font-medium">
-        <Link href="/" className={pathname === '/' ? 'text-blue-600' : 'text-gray-800'}>
-          Home
+    <nav className="bg-white shadow px-6 py-3 mb-6 flex items-center">
+      <Link href="/" className="mr-6 font-bold text-lg">CardShouker</Link>
+      <Link href="/cards" className="mr-4 text-gray-800 hover:text-blue-600">Cards</Link>
+      <Link href="/sell" className="mr-auto text-gray-800 hover:text-blue-600">Sell</Link>
+
+      {session ? (
+        <>
+          <span className="mr-4 text-sm text-gray-600">
+            Hi, {session.user.email}
+          </span>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
+          >
+            Logout
+          </button>
+        </>
+      ) : (
+        <Link href="/login" className="text-blue-600 hover:underline">
+          Login
         </Link>
-        <Link href="/cards" className={pathname.startsWith('/cards') && pathname === '/cards' ? 'text-blue-600' : 'text-gray-800'}>
-          Cards
-        </Link>
-        <Link href="/sell" className={pathname === '/sell' ? 'text-blue-600' : 'text-gray-800'}>
-          Sell
-        </Link>
-      </div>
+      )}
     </nav>
-  );
+  )
 }

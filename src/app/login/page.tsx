@@ -13,14 +13,47 @@ export default function LoginPage() {
 
   const handle = async () => {
     setError(null)
+
+    // 1️⃣ Appel à Supabase Auth selon le mode
+    let data, authError
     if (mode === 'signin') {
-      const { error } = await supabaseBrowser.auth.signInWithPassword({ email, password })
-      if (error) return setError(error.message)
+      const res = await supabaseBrowser.auth.signInWithPassword({ email, password })
+      data = res.data
+      authError = res.error
     } else {
-      const { error } = await supabaseBrowser.auth.signUp({ email, password })
-      if (error) return setError(error.message)
+      const res = await supabaseBrowser.auth.signUp({ email, password })
+      data = res.data
+      authError = res.error
     }
-    // Après succès, on redirige vers /sell
+    if (authError) {
+      return setError(authError.message)
+    }
+
+    // 2️⃣ Récupérer l'utilisateur authentifié
+    //    On sait qu’avec signIn/signUp, `data.user` est toujours défini si pas d’erreur
+    const user = data.user
+    if (!user) {
+      return setError('Unexpected: user not found after auth.')
+    }
+
+    // 3️⃣ Upsert dans la table sellers pour satisfaire la FK
+    const { error: upsertError } = await supabaseBrowser
+      .from('sellers')
+      .upsert(
+        {
+          id:           user.id,
+          display_name: user.email,  // ou un pseudo si tu proposes ce champ
+          country:      null,
+          bio:          null,
+        },
+        { onConflict: 'id' }
+      )
+    if (upsertError) {
+      console.error('Failed to upsert seller:', upsertError)
+      return setError(upsertError.message)
+    }
+
+    // 4️⃣ Redirection vers /sell
     router.push('/sell')
   }
 
