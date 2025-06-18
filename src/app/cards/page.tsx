@@ -15,7 +15,7 @@ type SearchParams = {
   maxLevel?: string
   minAtk?: string
   maxAtk?: string
-  set?: string
+  name_en?: string
 }
 
 export default async function CardsPage({
@@ -38,7 +38,7 @@ export default async function CardsPage({
     maxLevel:         sp.maxLevel  ? parseInt(sp.maxLevel, 10) : undefined,
     minAtk:           sp.minAtk    ? parseInt(sp.minAtk, 10)     : undefined,
     maxAtk:           sp.maxAtk    ? parseInt(sp.maxAtk, 10)     : undefined,
-    set:              sp.set               || undefined,
+    name_en:          sp.name_en               || undefined,
   }
 
   const { data: cards, count } = await getCardsPaginated(currentPage, filters)
@@ -61,19 +61,25 @@ export default async function CardsPage({
 
       {/* Card grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {cards?.map((card) => (
-          <div key={card.id} className="border p-3 rounded shadow bg-white">
-            <img
-              src={card.image_url}
-              alt={card.name}
-              className="w-full h-48 object-contain mb-2"
-            />
-            <Link href={`/cards/${card.id}`} className="text-blue-600 underline">
-              {card.name}
-            </Link>
-          </div>
-        ))}
-      </div>
+  {cards?.map((card) => (
+    <div key={card.id} className="border p-3 rounded shadow bg-white">
+      <img
+        src={card.card_image_url}
+        alt={card.card_name}
+        className="w-full h-48 object-contain mb-2"
+      />
+      <Link
+        href={`/cards/${card.id}`}
+        className="text-blue-600 underline block"
+      >
+        {card.card_name} ({card.rarity?.toUpperCase()})
+      </Link>
+      <p className="text-sm text-gray-600">
+        {card.name_en} &middot; {card.code} &middot; {card.edition}
+      </p>
+    </div>
+  ))}
+</div>
 
       {/* Pagination */}
       <div className="flex justify-center mt-6 gap-2">
@@ -84,7 +90,7 @@ export default async function CardsPage({
           return (
             <Link
               key={num}
-              href={`/cards?${params.toString()}`}
+              href={`/full_card_versions?${params.toString()}`}
               className={`px-3 py-1 rounded ${
                 num === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-200'
               }`}

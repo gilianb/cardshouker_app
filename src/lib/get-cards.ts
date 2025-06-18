@@ -12,7 +12,7 @@ export type CardFilterOptions = {
   maxLevel?: number;
   minAtk?: number;
   maxAtk?: number;
-  set?: string;
+  name_en?: string;
 };
 
 export async function getCardsPaginated(
@@ -24,12 +24,12 @@ export async function getCardsPaginated(
   const to = from + limit - 1;
 
   let query = supabase
-    .from('cards')
+    .from('full_card_versions')
     .select('*', { count: 'exact' });
 
   // Requête de base (texte)
   if (filters.search) {
-    query = query.ilike('name', `%${filters.search}%`);
+    query = query.ilike('card_name', `%${filters.search}%`);
   }
   if (filters.cardType) {
     query = query.eq('cardType', filters.cardType);
@@ -56,10 +56,10 @@ export async function getCardsPaginated(
       .neq('type', null)
       .ilike('type', `%${filters.type}%`);
   }
-  if (filters.set) {
+  if (filters.name_en) {
     query = query
-      .neq('sets', null)
-      .ilike('sets', `%${filters.set}%`);
+      .neq('name_en', null)
+      .ilike('name_en', `%${filters.name_en}%`);
   }
 
   // Pour les champs numériques : exclusion de NULL puis gte/lte
@@ -77,7 +77,7 @@ export async function getCardsPaginated(
 
   // Tri + pagination
   const { data, error, count } = await query
-    .order('name', { ascending: true })
+    .order('card_name', { ascending: true })
     .range(from, to);
 
   return { data, error, count };
