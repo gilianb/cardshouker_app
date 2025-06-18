@@ -2,7 +2,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/navbar";
+import ClientLayout from "@/components/ClientLayout";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Card Marketplace",
-  description: "Buy and sell trading cards online.",
+  title: "CardShouker",
+  description: "Buy, sell, and collect your favorite trading cards.",
 };
 
 export default function RootLayout({
@@ -29,8 +30,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-100 text-gray-800`}
       >
-        <Navbar /> {/* ta barre de navigation */}
-        <main className="max-w-screen-xl mx-auto p-4">{children}</main>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

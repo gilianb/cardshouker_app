@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { supabaseBrowser } from '@/lib/supabase-browser'
 import type { Session } from '@supabase/supabase-js'
 
-export default function Navbar() {
+export default function Navbar({ sidebarWidth }: { sidebarWidth: string }) {
   const [session, setSession] = useState<Session | null>(null)
   const router = useRouter()
 
@@ -32,7 +32,14 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="bg-white shadow px-6 py-3 mb-6 flex items-center justify-between">
+    <nav
+      className="fixed top-0 left-0 right-0 z-30 px-6 py-3 flex items-center justify-between
+        bg-gradient-to-r from-blue-700 via-blue-500 to-cyan-400 shadow"
+      style={{
+        height: '4rem',
+        minHeight: '4rem',
+      }}
+    >
       <div className="flex items-center gap-4">
         <Link href="/" className="font-bold text-lg">CardShouker</Link>
         <Link href="/cards" className="text-gray-800 hover:text-blue-600">Cards</Link>
