@@ -1,3 +1,4 @@
+// src/components/Navbar.tsx
 'use client'
 
 import Link from 'next/link'
@@ -5,6 +6,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabaseBrowser } from '@/lib/supabase-browser'
 import type { Session } from '@supabase/supabase-js'
+import CartIcon from './CartIcon'  // ← import du composant CartIcon
 
 export default function Navbar({ sidebarWidth }: { sidebarWidth: string }) {
   const [session, setSession] = useState<Session | null>(null)
@@ -15,11 +17,11 @@ export default function Navbar({ sidebarWidth }: { sidebarWidth: string }) {
       setSession(session)
     })
 
-    const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange(
-      (_event, newSession) => {
-        setSession(newSession)
-      }
-    )
+    const {
+      data: { subscription },
+    } = supabaseBrowser.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession)
+    })
 
     return () => {
       subscription.unsubscribe()
@@ -41,18 +43,29 @@ export default function Navbar({ sidebarWidth }: { sidebarWidth: string }) {
       }}
     >
       <div className="flex items-center gap-4">
-        <Link href="/" className="font-bold text-lg">CardShouker</Link>
-        <Link href="/cards" className="text-gray-800 hover:text-blue-600">Cards</Link>
-        <Link href="/sell" className="text-gray-800 hover:text-blue-600">Sell</Link>
+        <Link href="/" className="font-bold text-lg">
+          CardShouker
+        </Link>
+        <Link href="/cards" className="text-gray-800 hover:text-blue-600">
+          Cards
+        </Link>
+        <Link href="/sell" className="text-gray-800 hover:text-blue-600">
+          Sell
+        </Link>
         {session && (
-          <Link href="/dashboard" className="text-gray-800 hover:text-blue-600">Dashboard</Link>
+          <Link href="/dashboard" className="text-gray-800 hover:text-blue-600">
+            Dashboard
+          </Link>
         )}
       </div>
 
       <div className="flex items-center gap-4">
+        {/* Remplacé le lien texte "Cart" par l'icône avec badge */}
+        <CartIcon />
+
         {session ? (
           <>
-            <span className="text-sm text-gray-600">Hi, {session.user.email}</span>
+            <span className="text-sm text-gray-100">Hi, {session.user.email}</span>
             <button
               onClick={handleLogout}
               className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
@@ -61,7 +74,7 @@ export default function Navbar({ sidebarWidth }: { sidebarWidth: string }) {
             </button>
           </>
         ) : (
-          <Link href="/login" className="text-blue-600 hover:underline">
+          <Link href="/login" className="text-white hover:underline">
             Login
           </Link>
         )}

@@ -1,6 +1,7 @@
 // app/cards/[id]/page.tsx
 
 import supabase from '@/lib/supabase'
+import AddToCartButton from './AddToCartButton'
 
 export default async function CardDetailPage({
   params,
@@ -127,9 +128,7 @@ export default async function CardDetailPage({
                   <td className="p-2">{listing.condition}</td>
                   <td className="p-2">{listing.language}</td>
                   <td className="p-2">
-                    <button className="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700">
-                      Add to cart
-                    </button>
+                    <AddToCartButton listing={listing} fc={fc} />
                   </td>
                 </tr>
               )
