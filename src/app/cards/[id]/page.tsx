@@ -1,43 +1,54 @@
-// app/cards/[id]/page.tsx
-
+// src/app/cards/[id]/page.tsx
+import React from 'react'
 import supabase from '@/lib/supabase'
 import AddToCartButton from './AddToCartButton'
 
-export default async function CardDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+// On doit await params car params est une promise dans Next.js 15+
+export default async function CardDetailPage({ params }: { params: { id: string } }) {
+  // Await params avant de destructurer
   const { id } = await params
 
-  // Récupérer la version spécifique
+  // 1. Récupérer la version spécifique
   const { data: card, error: cardError } = await supabase
     .from('full_card_versions')
     .select('*')
     .eq('id', id)
     .single()
-
   if (cardError || !card) {
-    return <div className="p-6 text-red-500">Card version not found.</div>
+    return (
+      <div className="p-6 text-red-500">
+        Card version not found.
+      </div>
+    )
   }
 
-  // Récupérer les listings pour cette version uniquement
-  const { data: listings, error: listingsError } = await supabase
+  // 2. Récupérer les listings disponibles
+  const { data: listingsData, error: listingsError } = await supabase
     .from('listings')
     .select(`
-  id, price, quantity, condition, language, seller_id,
-  full_card_versions:card_id (
-    card_name, name_en, code, rarity, edition, card_image_url
-  ),
-  sellers(display_name, country)
-`)
-
+      id,
+      price,
+      quantity,
+      condition,
+      language,
+      full_card_versions:card_id (
+        card_name,
+        name_en,
+        code,
+        rarity,
+        edition,
+        card_image_url
+      ),
+      sellers(display_name, country)
+    `)
     .eq('card_id', id)
     .gt('quantity', 0)
     .order('price', { ascending: true })
+  const listings = listingsData ?? []
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
+      {/* Détails de la carte */}
       <div className="flex flex-col md:flex-row gap-6 mb-10">
         {card.card_image_url && (
           <a
@@ -56,10 +67,13 @@ export default async function CardDetailPage({
             </span>
           </a>
         )}
-
         <div className="flex-1 space-y-2 text-sm text-gray-700">
-          <h1 className="text-2xl font-bold text-gray-900">{card.card_name}</h1>
-          <p><strong>Set:</strong> {card.name_en} ({card.code}, {card.rarity?.toUpperCase()})</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {card.card_name}
+          </h1>
+          <p>
+            <strong>Set:</strong> {card.name_en} ({card.code}, {card.rarity?.toUpperCase()})
+          </p>
           <p><strong>Effect:</strong> {card.effect}</p>
           <p><strong>Type:</strong> {card.cardType}</p>
           <p><strong>Subcategory:</strong> {card.subcategory}</p>
@@ -78,11 +92,11 @@ export default async function CardDetailPage({
         <div className="text-red-500">Error loading listings: {listingsError.message}</div>
       )}
 
-      {(!listings || listings.length === 0) && !listingsError && (
+      {!listingsError && listings.length === 0 && (
         <div className="text-gray-500">No listings for this version yet.</div>
       )}
 
-      {listings && listings.length > 0 && (
+      {listings.length > 0 && (
         <table className="w-full mt-4 border text-sm">
           <thead>
             <tr className="bg-gray-100">
@@ -101,34 +115,33 @@ export default async function CardDetailPage({
             </tr>
           </thead>
           <tbody>
-            {listings.map((listing) => {
-              const fc = Array.isArray(listing.full_card_versions)
-                ? listing.full_card_versions[0]
-                : listing.full_card_versions
-
+            {listings.map((l) => {
+              const fc = Array.isArray(l.full_card_versions)
+                ? l.full_card_versions[0]
+                : l.full_card_versions
+              const seller =
+                Array.isArray(l.sellers) && l.sellers.length > 0
+                  ? l.sellers[0].display_name
+                  : 'Unknown'
               return (
-                <tr key={listing.id} className="border-t">
+                <tr key={l.id} className="border-t">
                   <td className="p-2 font-semibold">{fc?.card_name}</td>
                   <td className="p-2">{fc?.name_en}</td>
                   <td className="p-2">{fc?.code}</td>
                   <td className="p-2">{fc?.rarity}</td>
                   <td className="p-2">{fc?.edition}</td>
+                  <td className="p-2">{seller}</td>
                   <td className="p-2">
-                    {Array.isArray(listing.sellers) && listing.sellers.length > 0
-                      ? listing.sellers[0].display_name
-                      : 'Unknown'}
-                  </td>
-                  <td className="p-2">
-                    {Array.isArray(listing.sellers) && listing.sellers.length > 0
-                      ? listing.sellers[0].country
+                    {Array.isArray(l.sellers) && l.sellers.length > 0
+                      ? l.sellers[0].country
                       : '-'}
                   </td>
-                  <td className="p-2 font-semibold">{listing.price} €</td>
-                  <td className="p-2">{listing.quantity}</td>
-                  <td className="p-2">{listing.condition}</td>
-                  <td className="p-2">{listing.language}</td>
+                  <td className="p-2 font-semibold">{l.price} €</td>
+                  <td className="p-2">{l.quantity}</td>
+                  <td className="p-2">{l.condition}</td>
+                  <td className="p-2">{l.language}</td>
                   <td className="p-2">
-                    <AddToCartButton listing={listing} fc={fc} />
+                    <AddToCartButton listingId={l.id} />
                   </td>
                 </tr>
               )
@@ -139,5 +152,3 @@ export default async function CardDetailPage({
     </div>
   )
 }
-// This code defines a Next.js page that displays detailed information about a specific card version
-// and lists all active listings for that version. It uses Supabase to fetch the card details

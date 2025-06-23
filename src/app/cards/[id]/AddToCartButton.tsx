@@ -1,44 +1,30 @@
 // src/app/cards/[id]/AddToCartButton.tsx
 'use client'
 
-import { useCart } from "@/components/CartContext"
+import React from 'react'
+import { useCart } from '@/components/CartContext'
 
-type AddToCartButtonProps = {
-  listing: {
-    id: string
-    price: number
-    sellers?: { display_name: string }[]
-  }
-  fc?: {
-    card_name?: string
-  }
+export type AddToCartButtonProps = {
+  listingId: string
 }
 
 export default function AddToCartButton({
-  listing,
-  fc,
+  listingId,
 }: AddToCartButtonProps) {
-  const { addToCart } = useCart()
+  const { addToCart, loading } = useCart()
+
+  const handle = async () => {
+    await addToCart(listingId)
+  }
 
   return (
     <button
-      className="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700"
-      onClick={() => {
-        console.log("Ajout au panier :", listing.id)
-        addToCart({
-          listingId: listing.id,
-          cardName: fc?.card_name ?? "",
-          price: listing.price,
-          quantity: 1,
-          seller:
-            Array.isArray(listing.sellers) && listing.sellers.length > 0
-              ? listing.sellers[0].display_name
-              : "Unknown",
-        })
-        alert("Carte ajoutée au panier !") // feedback visuel
-      }}
+      onClick={handle}
+      disabled={loading}
+      className="bg-blue-600 text-white px-2 py-1 rounded text-xs 
+                 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
     >
-      Add to cart
+      {loading ? 'Adding…' : 'Add to cart'}
     </button>
   )
 }
